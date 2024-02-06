@@ -110,6 +110,8 @@ function App() {
     };
   }, []);
 
+  const imgUrl = new URL('/assets/house.jpeg', import.meta.url).href;
+
   return (
     <div className="h-[100svh]">
       <button
@@ -124,17 +126,11 @@ function App() {
       >
         add block
       </button>
-      <svg
-        ref={svgRef}
-        className="border"
-        width="100%"
-        height="90%"
-        // viewBox={`0 0 ${width} ${height}`}
-      >
+      <svg ref={svgRef} className="border" width="100%" height="90%">
         <image
           x={width * 0.2}
           y={(height * 0.2) / 2}
-          href="/assets/house.jpeg"
+          href={imgUrl}
           width={height * 0.8}
           height={height * 0.8}
         ></image>
