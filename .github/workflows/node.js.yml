@@ -32,7 +32,7 @@ jobs:
     - name: Install dependencies
       run: pnpm install
 
-       - name: Build
+    - name: Build
       run: pnpm run build -- --base ${{ github.repository }}
       
     - name: Deploy with gh-pages
