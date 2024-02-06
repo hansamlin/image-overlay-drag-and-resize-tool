@@ -33,7 +33,7 @@ jobs:
       run: pnpm install
 
     - name: Build
-      run: pnpm run build -- --base ${{ github.repository }}
+      run: pnpm run build -- --base /image-overlay-drag-and-resize-tool
       
     - name: Deploy with gh-pages
       run: |
