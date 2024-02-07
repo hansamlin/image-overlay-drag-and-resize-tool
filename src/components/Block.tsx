@@ -2,9 +2,11 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { Circle } from './Circle';
 
 export interface IBlock {
+  id: string;
   text: string;
   position: { x: number; y: number };
   size: { width: number; height: number };
+  windowNum: number;
 }
 
 export const Block: FC<
@@ -12,38 +14,55 @@ export const Block: FC<
     setBlocks: React.Dispatch<React.SetStateAction<IBlock[]>>;
     order: number;
   }
-> = ({ position: _position, text: _text, size: _size, setBlocks, order }) => {
+> = ({
+  position: _position,
+  text: _text,
+  size: _size,
+  setBlocks,
+  order,
+  windowNum: _windowNum,
+  id,
+}) => {
   const [text, setText] = useState(_text);
   const mousedownRef = useRef(false);
   const prevPositionRef = useRef({ x: 0, y: 0 });
   const [position, setPosition] = useState(_position);
   const foreignObjectRef = useRef<SVGForeignObjectElement>(null);
   const divRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textRef = useRef<HTMLInputElement>(null);
+  const windowNumRef = useRef<HTMLInputElement>(null);
   const [size, setSize] = useState(_size);
   const [isFocus, setIsFocus] = useState(false);
+  const [windowNum, setWindowNum] = useState(_windowNum);
 
   useEffect(() => {
     setBlocks((prev) => {
       return prev.slice(0, order).concat(
         [
           {
+            id,
             position,
             size,
             text,
+            windowNum,
           },
         ],
         prev.slice(order + 1),
       );
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [position, size, text]);
+  }, [position, size, text, windowNum]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       const element = e.target as Element;
+
       if (!element.contains(divRef.current)) {
         setIsFocus(false);
+      }
+
+      if (element === divRef.current || divRef.current?.contains(element)) {
+        setIsFocus(true);
       }
     };
 
@@ -56,10 +75,14 @@ export const Block: FC<
   }, []);
 
   useEffect(() => {
+    const divElement = divRef.current as HTMLDivElement;
+    const textInputElement = textRef.current as HTMLInputElement;
+    const windowNumInputElement = windowNumRef.current as HTMLInputElement;
+
     const onMouseDown = (e: MouseEvent) => {
       const element = e.target as Element;
 
-      if (element !== divRef.current && element !== inputRef.current) {
+      if (element !== divElement && !divElement.contains(element)) {
         return;
       }
 
@@ -73,6 +96,10 @@ export const Block: FC<
 
       const dx = e.clientX - prevPositionRef.current.x;
       const dy = e.clientY - prevPositionRef.current.y;
+
+      divElement.setAttribute('style', 'cursor:grabbing');
+      textInputElement.setAttribute('style', 'cursor:grabbing');
+      windowNumInputElement.setAttribute('style', 'cursor:grabbing');
 
       setPosition((prev) => {
         const newPositionX = Math.floor(prev.x + dx);
@@ -92,6 +119,9 @@ export const Block: FC<
       e.preventDefault();
       if (!mousedownRef.current) return;
 
+      divElement.removeAttribute('style');
+      textInputElement.removeAttribute('style');
+      windowNumInputElement.removeAttribute('style');
       mousedownRef.current = false;
       prevPositionRef.current = { x: 0, y: 0 };
     };
@@ -108,8 +138,35 @@ export const Block: FC<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (isFocus && e.key.toLocaleUpperCase() === 'BACKSPACE') {
+        setBlocks((prev) => {
+          return prev.filter((block) => {
+            return block.id !== id;
+          });
+        });
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown, { passive: false });
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFocus]);
+
+  const onTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
+  };
+
+  const onWindowNumChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isNaN(Number(e.target.value))) {
+      setWindowNum(0);
+    } else {
+      setWindowNum(Number(e.target.value));
+    }
   };
 
   return (
@@ -120,21 +177,29 @@ export const Block: FC<
         height={size.height}
         x={position.x}
         y={position.y}
+        className="foreignObject"
       >
-        <div
-          ref={divRef}
-          className="bg-yellow-700/50 h-full w-full"
-          onClick={() => {
-            setIsFocus(true);
-          }}
-        >
-          <input
-            ref={inputRef}
-            type="text"
-            className="input border-none bg-[transparent] focus-within:outline-none p-4"
-            value={text}
-            onChange={onChange}
-          />
+        <div ref={divRef} className="block bg-yellow-700/50 h-full w-full p-2">
+          <div className="flex items-center h-5">
+            <span className="flex-shrink-0">空間名稱:</span>
+            <input
+              ref={textRef}
+              type="text"
+              className="input border-none bg-[transparent] focus-within:outline-none px-2 w-full"
+              value={text}
+              onChange={onTextChange}
+            />
+          </div>
+          <div className="flex items-center h-5 mt-3">
+            <span className="flex-shrink-0">窗戶數量:</span>
+            <input
+              ref={windowNumRef}
+              type="text"
+              className="input border-none bg-[transparent] focus-within:outline-none px-2"
+              value={windowNum}
+              onChange={onWindowNumChange}
+            />
+          </div>
         </div>
       </foreignObject>
       {isFocus && (
