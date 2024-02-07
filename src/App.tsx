@@ -104,7 +104,7 @@ function App() {
   }, []);
 
   const imgUrl = new URL('/assets/house.jpeg', import.meta.url).href;
-  console.log(blocks);
+
   return (
     <div className="h-[100svh]">
       <svg ref={svgRef} className="border" width="100%" height="90%">
