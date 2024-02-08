@@ -32,8 +32,9 @@ export const Block: FC<
   const textRef = useRef<HTMLInputElement>(null);
   const windowNumRef = useRef<HTMLInputElement>(null);
   const [size, setSize] = useState(_size);
-  const [isFocus, setIsFocus] = useState(false);
+  const [isBlockFocus, setIsBlockFocus] = useState(false);
   const [windowNum, setWindowNum] = useState(_windowNum);
+  const [isInputFocus, setIsInputFocus] = useState(false);
 
   useEffect(() => {
     setBlocks((prev) => {
@@ -58,11 +59,11 @@ export const Block: FC<
       const element = e.target as Element;
 
       if (!element.contains(divRef.current)) {
-        setIsFocus(false);
+        setIsBlockFocus(false);
       }
 
       if (element === divRef.current || divRef.current?.contains(element)) {
-        setIsFocus(true);
+        setIsBlockFocus(true);
       }
     };
 
@@ -140,7 +141,11 @@ export const Block: FC<
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (isFocus && e.key.toLocaleUpperCase() === 'BACKSPACE') {
+      if (
+        !isInputFocus &&
+        isBlockFocus &&
+        e.key.toLocaleUpperCase() === 'BACKSPACE'
+      ) {
         setBlocks((prev) => {
           return prev.filter((block) => {
             return block.id !== id;
@@ -155,7 +160,7 @@ export const Block: FC<
       window.removeEventListener('keydown', onKeyDown);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFocus]);
+  }, [isBlockFocus, isInputFocus]);
 
   const onTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
@@ -167,6 +172,14 @@ export const Block: FC<
     } else {
       setWindowNum(Number(e.target.value));
     }
+  };
+
+  const onInputFocus = () => {
+    setIsInputFocus(true);
+  };
+
+  const onInputBlur = () => {
+    setIsInputFocus(false);
   };
 
   return (
@@ -188,6 +201,8 @@ export const Block: FC<
               className="input border-none bg-[transparent] focus-within:outline-none px-2 w-full"
               value={text}
               onChange={onTextChange}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
             />
           </div>
           <div className="flex items-center h-5 mt-3">
@@ -195,14 +210,16 @@ export const Block: FC<
             <input
               ref={windowNumRef}
               type="text"
-              className="input border-none bg-[transparent] focus-within:outline-none px-2"
+              className="input border-none bg-[transparent] focus-within:outline-none px-2 w-full"
               value={windowNum}
               onChange={onWindowNumChange}
+              onFocus={onInputFocus}
+              onBlur={onInputBlur}
             />
           </div>
         </div>
       </foreignObject>
-      {isFocus && (
+      {isBlockFocus && (
         <>
           <Circle
             type="LeftTop"
