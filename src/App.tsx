@@ -1,12 +1,53 @@
 import { useEffect, useRef, useState } from 'react';
 import { Block, IBlock } from './components/Block';
 import { uuid } from '../utils/uuid';
+import { RainbowHex, rainbowHex } from '../utils/constant';
 
 function App() {
   const [blocks, setBlocks] = useState<IBlock[]>([]);
   const svgRef = useRef<SVGSVGElement>(null);
-  const width = window.innerWidth;
-  const height = window.innerHeight;
+  // const width = window.innerWidth;
+  // const height = window.innerHeight;
+  const [imgSize, setImgSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+  const colorIndex = useRef(0);
+  const alreadyAdd = useRef(false);
+  console.log(blocks);
+  useEffect(() => {
+    if (blocks.length === 0) return;
+    if (!alreadyAdd.current) return;
+
+    colorIndex.current++;
+
+    return () => {
+      alreadyAdd.current = true;
+    };
+    // const colors = blocks.map((e) => e.colorIndex);
+
+    // const nextIndex = rainbowHex.findIndex((_, i) => {
+    //   return !colors.includes(i);
+    // });
+
+    // colorIndex.current = nextIndex;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blocks.length]);
+
+  useEffect(() => {
+    const src = new URL('/assets/house.jpeg', import.meta.url).href;
+
+    const img = new Image();
+
+    img.onload = () => {
+      setImgSize({
+        width: img.width / 3,
+        height: img.height / 3,
+      });
+    };
+
+    img.src = src;
+  }, []);
 
   useEffect(() => {
     const svgElement = svgRef.current as SVGSVGElement;
@@ -61,6 +102,16 @@ function App() {
       prevPosition.y = e.clientY;
     }
 
+    function handleFilterColor(arr: RainbowHex[]) {
+      const newArr = arr.filter((e, i, self) => self.indexOf(e) !== i);
+
+      if (newArr.length > 7) return handleFilterColor(newArr);
+
+      if (newArr.length === 7) return [];
+
+      return newArr;
+    }
+
     function onMouseup() {
       if (!mousedown) return;
       mousedown = false;
@@ -69,6 +120,15 @@ function App() {
         foreignObject.width.baseVal.value !== 0 &&
         foreignObject.height.baseVal.value !== 0
       ) {
+        const _colors = blocks.map((block) => block.color);
+
+        const colors =
+          _colors.length >= 7 ? handleFilterColor(_colors) : _colors;
+
+        const _color = rainbowHex.find((color) => {
+          return !colors.includes(color);
+        });
+
         setBlocks((prev) => {
           return prev.concat({
             text: '',
@@ -82,6 +142,7 @@ function App() {
             },
             windowNum: 0,
             id: uuid(),
+            color: _color as RainbowHex,
           });
         });
       }
@@ -101,20 +162,23 @@ function App() {
       svgElement.removeEventListener('mousemove', onMousemove);
       svgElement.removeEventListener('mouseup', onMouseup);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blocks.length]);
 
   const imgUrl = new URL('/assets/house.jpeg', import.meta.url).href;
 
   return (
-    <div className="h-[100svh]">
-      <svg ref={svgRef} className="border" width="100%" height="90%">
-        <image
-          x={width * 0.2}
-          y={(height * 0.2) / 2}
-          href={imgUrl}
-          width={height * 0.8}
-          height={height * 0.8}
-        ></image>
+    <div className="sh-[100svh]">
+      <svg ref={svgRef} className="border" width="1600" height="900">
+        {imgSize && (
+          <image
+            x={(1600 - imgSize.width) / 2}
+            y={(900 - imgSize.height) / 2}
+            href={imgUrl}
+            width={imgSize.width}
+            height={imgSize.height}
+          />
+        )}
         {blocks.map((e, i) => (
           <Block
             key={e.id}
@@ -125,6 +189,7 @@ function App() {
             size={e.size}
             windowNum={e.windowNum}
             id={e.id}
+            color={e.color}
           />
         ))}
       </svg>

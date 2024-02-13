@@ -1,5 +1,7 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import { Circle } from './Circle';
+import { RainbowHex } from '../../utils/constant';
+import { cx } from '../../utils/cx';
 
 export interface IBlock {
   id: string;
@@ -7,6 +9,7 @@ export interface IBlock {
   position: { x: number; y: number };
   size: { width: number; height: number };
   windowNum: number;
+  color: RainbowHex;
 }
 
 export const Block: FC<
@@ -22,6 +25,7 @@ export const Block: FC<
   order,
   windowNum: _windowNum,
   id,
+  color,
 }) => {
   const [text, setText] = useState(_text);
   const mousedownRef = useRef(false);
@@ -46,6 +50,7 @@ export const Block: FC<
             size,
             text,
             windowNum,
+            color,
           },
         ],
         prev.slice(order + 1),
@@ -192,7 +197,10 @@ export const Block: FC<
         y={position.y}
         className="foreignObject"
       >
-        <div ref={divRef} className="block bg-yellow-700/50 h-full w-full p-2">
+        <div
+          ref={divRef}
+          className={cx('block h-full w-full p-2', color)}
+        >
           <div className="flex items-center h-5">
             <span className="flex-shrink-0">空間名稱:</span>
             <input
