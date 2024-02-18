@@ -132,7 +132,7 @@ export default function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  console.log(blocks);
+
   return (
     <div className="sh-[100svh]">
       <svg ref={svgRef} className="border" width="1600" height="900">
