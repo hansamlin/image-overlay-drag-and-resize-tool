@@ -305,7 +305,7 @@ export const Block: FC<
           {!isWindow && (
             <>
               <div className="flex items-center h-5">
-                <span className="flex-shrink-0">空間名稱:</span>
+                <span className="flex-shrink-0">空間</span>
                 <Input
                   ref={textRef}
                   type="text"
@@ -316,7 +316,7 @@ export const Block: FC<
                 />
               </div>
               <div className="flex items-center h-5 mt-3">
-                <span className="flex-shrink-0">窗戶數量:</span>
+                <span className="flex-shrink-0">窗戶</span>
                 <Input
                   ref={windowNumRef}
                   value={windowNum}
