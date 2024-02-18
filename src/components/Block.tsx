@@ -333,7 +333,7 @@ export const Block: FC<
             <Input
               ref={textRef}
               value={text}
-              className="text-center p-0"
+              className="text-center p-0 border-none focus-within:outline-none"
               readOnly
               onFocus={onInputFocus}
               onBlur={onInputBlur}

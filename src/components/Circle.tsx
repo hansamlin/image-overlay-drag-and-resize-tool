@@ -12,54 +12,80 @@ export const Circle: FC<
     type: Type;
   }
 > = ({ type, updatePosition, updateSize, position, size, ...props }) => {
-  const mousedownRef = useRef(false);
-  const prevPositionRef = useRef({ x: 0, y: 0 });
+  const positionRef = useRef(position);
+  const sizeRef = useRef(size);
   const circleRef = useRef<SVGCircleElement>(null);
 
+  positionRef.current = position;
+  sizeRef.current = size;
+
   useEffect(() => {
+    let mousedown = false;
+    const prevPosition: Position = { x: 0, y: 0 };
     const circle = circleRef.current as SVGCircleElement;
 
     const onMouseDown = (e: MouseEvent) => {
       const element = e.target as Element;
       if (element !== circle) return;
 
-      mousedownRef.current = true;
-      prevPositionRef.current.x = e.clientX;
-      prevPositionRef.current.y = e.clientY;
+      mousedown = true;
+      prevPosition.x = e.clientX;
+      prevPosition.y = e.clientY;
     };
 
     const onMouseMove = (e: MouseEvent) => {
-      if (!mousedownRef.current) return;
+      if (!mousedown) return;
 
-      const dx = e.clientX - prevPositionRef.current.x;
-      const dy = e.clientY - prevPositionRef.current.y;
+      const dx = e.clientX - prevPosition.x;
+      const dy = e.clientY - prevPosition.y;
 
       if (type === 'Rightbottom') {
-        updateSize({ width: size.width + dx, height: size.height + dy });
+        updateSize({
+          width: sizeRef.current.width + dx,
+          height: sizeRef.current.height + dy,
+        });
       }
 
       if (type === 'RightTop') {
-        updateSize({ width: size.width + dx, height: size.height - dy });
-        updatePosition({ ...position, y: position.y + dy });
+        updateSize({
+          width: sizeRef.current.width + dx,
+          height: sizeRef.current.height - dy,
+        });
+        updatePosition({
+          ...positionRef.current,
+          y: positionRef.current.y + dy,
+        });
       }
 
       if (type === 'LeftTop') {
-        updateSize({ width: size.width - dx, height: size.height - dy });
-        updatePosition({ x: position.x + dx, y: position.y + dy });
+        updateSize({
+          width: sizeRef.current.width - dx,
+          height: sizeRef.current.height - dy,
+        });
+        updatePosition({
+          x: positionRef.current.x + dx,
+          y: positionRef.current.y + dy,
+        });
       }
 
       if (type === 'LeftBottom') {
-        updateSize({ width: size.width - dx, height: size.height + dy });
-        updatePosition({ ...position, x: position.x + dx });
+        updateSize({
+          width: sizeRef.current.width - dx,
+          height: sizeRef.current.height + dy,
+        });
+        updatePosition({
+          ...positionRef.current,
+          x: positionRef.current.x + dx,
+        });
       }
 
-      prevPositionRef.current.x = e.clientX;
-      prevPositionRef.current.y = e.clientY;
+      prevPosition.x = e.clientX;
+      prevPosition.y = e.clientY;
     };
 
     const onMouseUp = () => {
-      if (!mousedownRef.current) return;
-      mousedownRef.current = false;
+      if (!mousedown) return;
+      mousedown = false;
     };
 
     window.addEventListener('mousedown', onMouseDown, { passive: false });
