@@ -6,13 +6,6 @@ export enum RainbowHex {
   BLUE = 'blue',
   INDIGO = 'indigo',
   PURPLE = 'purple',
-  // RED = '#FF0000',
-  // ORANGE = '#FF7F00',
-  // YELLOW = '#FFFF00',
-  // GREEN = '#00FF00',
-  // BLUE = '#0000FF',
-  // INDIGO = '#00FFFF',
-  // PURPLE = '#8B00FF',
 }
 
 export const rainbowHex: RainbowHex[] = [

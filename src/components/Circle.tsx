@@ -1,21 +1,17 @@
 import { FC, useEffect, useRef } from 'react';
+import { Position, Size } from './Block';
 
 export type Type = 'LeftTop' | 'RightTop' | 'LeftBottom' | 'Rightbottom';
 
 export const Circle: FC<
   React.SVGAttributes<SVGCircleElement> & {
-    setSize: React.Dispatch<
-      React.SetStateAction<{ width: number; height: number }>
-    >;
-    setPosition: React.Dispatch<
-      React.SetStateAction<{
-        x: number;
-        y: number;
-      }>
-    >;
+    updatePosition: (value: Position) => void;
+    updateSize: (value: Size) => void;
+    position: Position;
+    size: Size;
     type: Type;
   }
-> = ({ setSize, setPosition, type, ...props }) => {
+> = ({ type, updatePosition, updateSize, position, size, ...props }) => {
   const mousedownRef = useRef(false);
   const prevPositionRef = useRef({ x: 0, y: 0 });
   const circleRef = useRef<SVGCircleElement>(null);
@@ -39,30 +35,22 @@ export const Circle: FC<
       const dy = e.clientY - prevPositionRef.current.y;
 
       if (type === 'Rightbottom') {
-        setSize((prev) => {
-          return { width: prev.width + dx, height: prev.height + dy };
-        });
+        updateSize({ width: size.width + dx, height: size.height + dy });
       }
 
       if (type === 'RightTop') {
-        setSize((prev) => {
-          return { width: prev.width + dx, height: prev.height - dy };
-        });
-        setPosition((prev) => ({ ...prev, y: prev.y + dy }));
+        updateSize({ width: size.width + dx, height: size.height - dy });
+        updatePosition({ ...position, y: position.y + dy });
       }
 
       if (type === 'LeftTop') {
-        setSize((prev) => {
-          return { width: prev.width - dx, height: prev.height - dy };
-        });
-        setPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+        updateSize({ width: size.width - dx, height: size.height - dy });
+        updatePosition({ x: position.x + dx, y: position.y + dy });
       }
 
       if (type === 'LeftBottom') {
-        setSize((prev) => {
-          return { width: prev.width - dx, height: prev.height + dy };
-        });
-        setPosition((prev) => ({ ...prev, x: prev.x + dx }));
+        updateSize({ width: size.width - dx, height: size.height + dy });
+        updatePosition({ ...position, x: position.x + dx });
       }
 
       prevPositionRef.current.x = e.clientX;

@@ -1,53 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, memo, useEffect, useRef, useState } from 'react';
 import { Block, IBlock } from './components/Block';
 import { uuid } from '../utils/uuid';
 import { RainbowHex, rainbowHex } from '../utils/constant';
+import { SvgImage } from './components/SvgImage';
 
-function App() {
+const MemoSvgImage = memo(SvgImage);
+const MemoBlock = memo(Block);
+
+const getForeignObjectSize = (_foreignObject: SVGForeignObjectElement) => {
+  return {
+    width: _foreignObject.width.baseVal.value,
+    height: _foreignObject.height.baseVal.value,
+  };
+};
+
+export default function App() {
   const [blocks, setBlocks] = useState<IBlock[]>([]);
+  const blocksRef = useRef(blocks);
   const svgRef = useRef<SVGSVGElement>(null);
-  // const width = window.innerWidth;
-  // const height = window.innerHeight;
-  const [imgSize, setImgSize] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-  const colorIndex = useRef(0);
-  const alreadyAdd = useRef(false);
-  console.log(blocks);
-  useEffect(() => {
-    if (blocks.length === 0) return;
-    if (!alreadyAdd.current) return;
-
-    colorIndex.current++;
-
-    return () => {
-      alreadyAdd.current = true;
-    };
-    // const colors = blocks.map((e) => e.colorIndex);
-
-    // const nextIndex = rainbowHex.findIndex((_, i) => {
-    //   return !colors.includes(i);
-    // });
-
-    // colorIndex.current = nextIndex;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blocks.length]);
-
-  useEffect(() => {
-    const src = new URL('/assets/house.jpeg', import.meta.url).href;
-
-    const img = new Image();
-
-    img.onload = () => {
-      setImgSize({
-        width: img.width / 3,
-        height: img.height / 3,
-      });
-    };
-
-    img.src = src;
-  }, []);
+  blocksRef.current = blocks;
 
   useEffect(() => {
     const svgElement = svgRef.current as SVGSVGElement;
@@ -61,8 +32,8 @@ function App() {
       if (element !== svgElement && element.tagName !== 'image') return;
 
       mousedown = true;
-      prevPosition.x = e.clientX;
-      prevPosition.y = e.clientY;
+      prevPosition.x = e.pageX;
+      prevPosition.y = e.pageY;
 
       foreignObject = document.createElementNS(
         'http://www.w3.org/2000/svg',
@@ -72,10 +43,10 @@ function App() {
       foreignObject.setAttribute('width', '0');
       foreignObject.setAttribute('height', '0');
 
-      foreignObject.setAttribute('x', String(e.clientX));
+      foreignObject.setAttribute('x', String(e.pageX));
       foreignObject.setAttribute(
         'y',
-        String(e.clientY - svgElement.getBoundingClientRect().top),
+        String(e.pageY - svgElement.getBoundingClientRect().top),
       );
 
       foreignObject.style.border = '2px solid';
@@ -86,20 +57,16 @@ function App() {
     function onMousemove(e: MouseEvent) {
       if (!mousedown) return;
 
-      const dx = e.clientX - prevPosition.x;
-      const dy = e.clientY - prevPosition.y;
+      const dx = e.pageX - prevPosition.x;
+      const dy = e.pageY - prevPosition.y;
 
-      foreignObject.setAttribute(
-        'width',
-        String(foreignObject.width.baseVal.value + dx),
-      );
-      foreignObject.setAttribute(
-        'height',
-        String(foreignObject.height.baseVal.value + dy),
-      );
+      const { width, height } = getForeignObjectSize(foreignObject);
 
-      prevPosition.x = e.clientX;
-      prevPosition.y = e.clientY;
+      foreignObject.setAttribute('width', String(width + dx));
+      foreignObject.setAttribute('height', String(height + dy));
+
+      prevPosition.x = e.pageX;
+      prevPosition.y = e.pageY;
     }
 
     function handleFilterColor(arr: RainbowHex[]) {
@@ -120,7 +87,7 @@ function App() {
         foreignObject.width.baseVal.value !== 0 &&
         foreignObject.height.baseVal.value !== 0
       ) {
-        const _colors = blocks.map((block) => block.color);
+        const _colors = blocksRef.current.map((block) => block.color);
 
         const colors =
           _colors.length >= 7 ? handleFilterColor(_colors) : _colors;
@@ -143,6 +110,7 @@ function App() {
             windowNum: 0,
             id: uuid(),
             color: _color as RainbowHex,
+            windows: [],
           });
         });
       }
@@ -163,38 +131,32 @@ function App() {
       svgElement.removeEventListener('mouseup', onMouseup);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blocks.length]);
-
-  const imgUrl = new URL('/assets/house.jpeg', import.meta.url).href;
-
+  }, []);
+  console.log(blocks);
   return (
     <div className="sh-[100svh]">
       <svg ref={svgRef} className="border" width="1600" height="900">
-        {imgSize && (
-          <image
-            x={(1600 - imgSize.width) / 2}
-            y={(900 - imgSize.height) / 2}
-            href={imgUrl}
-            width={imgSize.width}
-            height={imgSize.height}
-          />
-        )}
-        {blocks.map((e, i) => (
-          <Block
-            key={e.id}
-            order={i}
-            setBlocks={setBlocks}
-            position={e.position}
-            text={e.text}
-            size={e.size}
-            windowNum={e.windowNum}
-            id={e.id}
-            color={e.color}
-          />
-        ))}
+        <MemoSvgImage />
+        {blocks.map((e, i) => {
+          return (
+            <Fragment key={e.id}>
+              <MemoBlock key={e.id} order={i} setBlocks={setBlocks} {...e} />
+              {e.windows.length > 0 &&
+                e.windows.map((_window) => {
+                  return (
+                    <MemoBlock
+                      key={_window.id}
+                      order={i}
+                      setBlocks={setBlocks}
+                      {..._window}
+                      isWindow={true}
+                    />
+                  );
+                })}
+            </Fragment>
+          );
+        })}
       </svg>
     </div>
   );
 }
-
-export default App;
